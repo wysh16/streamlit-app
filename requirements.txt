@@ -1,0 +1,6 @@
+streamlit
+pymongo[srv]
+dnspython
+certifi
+pandas
+vaex
