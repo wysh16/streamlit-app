@@ -35,8 +35,8 @@ st.title("📊 Customer Data Analytics Application")
 # ===============================
 df_pd = load_data()
 
-# 👉 Chuyển sang Vaex (CỐT LÕI CÂU 2)
-df_vaex = vaex.from_pandas(df_pd, copy_index=False)
+# # 👉 Chuyển sang Vaex (CỐT LÕI CÂU 2)
+# df_vaex = vaex.from_pandas(df_pd, copy_index=False)
 
 st.caption("⚙️ Data processed using **Vaex** for scalable analytics")
 
