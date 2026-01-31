@@ -3,6 +3,9 @@ import pandas as pd
 from pymongo import MongoClient
 import certifi
 
+# ===============================
+# Load data from MongoDB
+# ===============================
 @st.cache_data
 def load_data():
     MONGO_URI = "mongodb+srv://huongntt22406_db_user:T5colen10diemmmm@cluster0.togqgmv.mongodb.net/?retryWrites=true&w=majority"
@@ -21,97 +24,92 @@ def load_data():
     # Chuẩn hóa tên cột
     df.columns = df.columns.str.title()
 
+    # Xóa _id của MongoDB nếu có
     if "_Id" in df.columns:
         df = df.drop(columns=["_Id"])
 
     return df
 
 
-st.set_page_config(page_title="Customer Analytics App", layout="wide")
+# ===============================
+# App Config
+# ===============================
+st.set_page_config(
+    page_title="Customer Analytics App",
+    layout="wide"
+)
+
 st.title("📊 Customer Data Analytics Application")
+st.caption("⚙️ Data processed using **Pandas** (Streamlit Cloud compatible)")
 
 # ===============================
-# Load data
+# Load dataset
 # ===============================
-df_pd = load_data()
-
-# # 👉 Chuyển sang Vaex (CỐT LÕI CÂU 2)
-# df_vaex = vaex.from_pandas(df_pd, copy_index=False)
-
-st.caption("⚙️ Data processed using **Vaex** for scalable analytics")
-
+df = load_data()
 
 # ===============================
-# Dataset Overview (Vaex)
+# Dataset Overview
 # ===============================
 st.subheader("🔍 Dataset Overview")
 
 col1, col2, col3 = st.columns(3)
-col1.metric("Total Transactions", len(df_vaex))
-col2.metric("Countries", df_vaex["Country"].nunique())
-col3.metric("Customer Segments", df_vaex["Customer_Segment"].nunique())
-
+col1.metric("Total Transactions", len(df))
+col2.metric("Countries", df["Country"].nunique())
+col3.metric("Customer Segments", df["Customer_Segment"].nunique())
 
 # ===============================
-# Gender Distribution (Vaex → Pandas)
+# Gender Distribution
 # ===============================
 st.subheader("👥 Gender Distribution")
 
 gender_dist = (
-    df_vaex.groupby("Gender", agg={"count": vaex.agg.count()})
-    .to_pandas_df()
-    .set_index("Gender")
+    df["Gender"]
+    .value_counts()
+    .to_frame(name="Count")
 )
 
 st.bar_chart(gender_dist)
 
-
 # ===============================
-# Age Analysis (Vaex)
+# Age Analysis
 # ===============================
 st.subheader("🎂 Age Analysis")
 
-age_stats = df_vaex["Age"].describe()
-st.write(age_stats)
-
+age_stats = df["Age"].describe()
+st.dataframe(age_stats)
 
 # ===============================
-# Income Distribution (Categorical – Vaex)
+# Income Level Distribution
 # ===============================
 st.subheader("💰 Income Level Distribution")
 
 income_dist = (
-    df_vaex.groupby("Income", agg={"count": vaex.agg.count()})
-    .to_pandas_df()
-    .set_index("Income")
+    df["Income"]
+    .value_counts()
+    .to_frame(name="Count")
 )
 
 st.bar_chart(income_dist)
 
-
 # ===============================
-# Purchase Behavior (Vaex)
+# Purchase Behavior by Segment
 # ===============================
 st.subheader("🛒 Purchase Behavior by Customer Segment")
 
 segment_purchase = (
-    df_vaex.groupby(
-        "Customer_Segment",
-        agg={"Avg_Purchases": vaex.agg.mean("Total_Purchases")}
-    )
-    .to_pandas_df()
+    df.groupby("Customer_Segment", as_index=False)
+      .agg(Avg_Purchases=("Total_Purchases", "mean"))
 )
 
 st.dataframe(segment_purchase)
-
 
 # ===============================
 # Interactive Filter
 # ===============================
 st.subheader("🎯 Explore Customers by Country")
 
-countries = sorted(df_vaex["Country"].unique())
+countries = sorted(df["Country"].dropna().unique())
 selected_country = st.selectbox("Select Country", countries)
 
-filtered_vaex = df_vaex[df_vaex["Country"] == selected_country]
-st.dataframe(filtered_vaex.head(10).to_pandas_df())
+filtered_df = df[df["Country"] == selected_country]
+st.dataframe(filtered_df.head(10))
