@@ -3,4 +3,3 @@ pymongo[srv]
 dnspython
 certifi
 pandas
-vaex
